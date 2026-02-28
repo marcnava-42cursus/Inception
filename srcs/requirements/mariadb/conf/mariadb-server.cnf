@@ -1,0 +1,8 @@
+[mariadb]
+bind-address = 0.0.0.0
+port = 3306
+socket = /run/mysqld/mysqld.sock
+datadir = /var/lib/mysql
+
+character-set-server = utf8mb4
+collation-server = utf8mb4_general_ci

@@ -1,0 +1,19 @@
+*
+!.gitignore
+!Makefile
+!README.md
+!srcs/
+!srcs/**/
+!srcs/docker-compose.yml
+!srcs/**/Dockerfile
+!srcs/**/.dockerignore
+!srcs/**/.gitkeep
+!srcs/**/*.conf
+!srcs/**/*.cnf
+!srcs/**/*.sh
+!srcs/.env.example
+
+# Never commit credentials
+srcs/.env
+secrets/*
+!secrets/.gitkeep
