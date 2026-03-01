@@ -1,6 +1,7 @@
 NAME = inception
 ENV_FILE = srcs/.env
 COMPOSE = docker compose -p $(NAME) -f srcs/docker-compose.yml --env-file srcs/.env
+IMAGES = mariadb:inception wordpress:inception nginx:inception adminer:inception
 DATA_PATH = $(shell [ -f $(ENV_FILE) ] && sed -n 's/^DATA_PATH=//p' $(ENV_FILE))
 
 ifeq ($(strip $(DATA_PATH)),)
@@ -14,6 +15,9 @@ HOST_DATA_PATH = $(DATA_PATH)
 endif
 
 all: up
+
+build:
+	$(COMPOSE) build
 
 up:
 	mkdir -p $(HOST_DATA_PATH)/mariadb
@@ -33,6 +37,9 @@ ps:
 
 clean: down
 
+iclean: down
+	-docker image rm $(IMAGES) 2>/dev/null || true
+
 vclean:
 	-$(COMPOSE) down --remove-orphans
 	-docker volume rm $(NAME)_mariadb_data $(NAME)_wordpress_data 2>/dev/null || true
@@ -44,4 +51,4 @@ fclean:
 
 re: fclean up
 
-.PHONY: all up down restart logs ps clean vclean fclean re
+.PHONY: all build up down restart logs ps clean iclean vclean fclean re

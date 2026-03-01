@@ -13,6 +13,7 @@
 !srcs/**/*.conf
 !srcs/**/*.cnf
 !srcs/**/*.sh
+!srcs/**/*.R
 !srcs/.env.example
 
 # Never commit credentials

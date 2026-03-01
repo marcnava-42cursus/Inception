@@ -41,10 +41,34 @@ services:
       - .env
     depends_on:
       - wordpress
+      - adminer
+      - static-web
     ports:
       - "443:443"
     volumes:
       - wordpress_data:/var/www/html:ro
+    networks:
+      - inception
+    restart: unless-stopped
+
+  adminer:
+    container_name: adminer
+    image: adminer:inception
+    build:
+      context: ./requirements/bonus/adminer
+      dockerfile: Dockerfile
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+    restart: unless-stopped
+
+  static-web:
+    container_name: static-web
+    image: static-web:inception
+    build:
+      context: ./requirements/bonus/static-web
+      dockerfile: Dockerfile
     networks:
       - inception
     restart: unless-stopped
