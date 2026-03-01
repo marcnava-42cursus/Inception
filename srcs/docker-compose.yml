@@ -23,8 +23,19 @@ services:
       - .env
     depends_on:
       - mariadb
+      - redis
     volumes:
       - wordpress_data:/var/www/html
+    networks:
+      - inception
+    restart: unless-stopped
+
+  redis:
+    container_name: redis
+    image: redis:inception
+    build:
+      context: ./requirements/bonus/redis
+      dockerfile: Dockerfile
     networks:
       - inception
     restart: unless-stopped
@@ -69,6 +80,25 @@ services:
     build:
       context: ./requirements/bonus/static-web
       dockerfile: Dockerfile
+    networks:
+      - inception
+    restart: unless-stopped
+
+  ftp:
+    container_name: ftp
+    image: ftp:inception
+    build:
+      context: ./requirements/bonus/ftp
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+    ports:
+      - "21:21"
+      - "${FTP_PASV_MIN_PORT}-${FTP_PASV_MAX_PORT}:${FTP_PASV_MIN_PORT}-${FTP_PASV_MAX_PORT}"
+    volumes:
+      - wordpress_data:/var/www/html
     networks:
       - inception
     restart: unless-stopped

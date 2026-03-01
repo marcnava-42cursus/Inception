@@ -8,13 +8,11 @@
 - Your login domain mapped in `/etc/hosts` (for example `marcnava.42.fr`).
 
 ### Configuration files
-1. Copy the template:
-   - `cp srcs/.env.example srcs/.env`
-2. Edit `srcs/.env` with real values:
+1. Edit `srcs/.env` with real values:
    - Domain name.
    - MariaDB credentials.
    - WordPress admin/user credentials.
-3. Optional: place local secret files in `secrets/` (ignored by Git).
+2. Optional: place local secret files in `secrets/` (ignored by Git).
 
 ## Build and launch workflow
 - Build/start stack:

@@ -12,6 +12,9 @@ RUN apk add --no-cache mariadb-client
 RUN apk add --no-cache php83 php83-fpm php83-mysqli php83-curl php83-dom php83-exif
 RUN apk add --no-cache php83-fileinfo php83-gd php83-mbstring php83-openssl php83-phar
 RUN apk add --no-cache php83-session php83-xml php83-zip
+RUN apk add --no-cache php83-ctype
+RUN apk add --no-cache php83-tokenizer
+RUN apk add --no-cache php83-pecl-redis
 RUN apk add --no-cache su-exec
 RUN ln -sf /usr/bin/php83 /usr/bin/php
 

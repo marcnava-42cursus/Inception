@@ -26,8 +26,6 @@ This stack provides:
 ## Credentials location and management
 - Runtime variables are read from `srcs/.env`.
 - Do not commit `srcs/.env` to Git.
-- Start from the template:
-  - `cp srcs/.env.example srcs/.env`
 - Data persistence base path is controlled by `DATA_PATH` in `srcs/.env` (`../data` for project-root local tests, or `/home/<login>/data` for strict subject mode).
 - Optional local secret files can be stored in `secrets/` (ignored by Git).
 

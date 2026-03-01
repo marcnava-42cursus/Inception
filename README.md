@@ -23,7 +23,6 @@ This project also forces explicit infrastructure definition (`docker-compose.yml
 - `srcs/requirements/mariadb`: MariaDB image, config and init script.
 - `srcs/requirements/wordpress`: WordPress + PHP-FPM image and bootstrap script.
 - `srcs/requirements/nginx`: NGINX image and TLS-enabled virtual host config.
-- `srcs/.env.example`: safe template for runtime environment variables.
 
 ### Main design choices and comparisons
 
@@ -35,7 +34,7 @@ This project also forces explicit infrastructure definition (`docker-compose.yml
 #### Secrets vs Environment Variables
 - Environment variables are easy for non-sensitive runtime config (domain, DB host, feature toggles).
 - Secrets are preferable for sensitive values (passwords, keys) because they are not baked into images and can be mounted as files.
-- This project keeps `.env` out of Git and provides `.env.example` for safe sharing.
+- This project keeps `.env` out of Git.
 
 #### Docker Network vs Host Network
 - Docker bridge networks isolate services and provide internal DNS by service name.
@@ -48,9 +47,7 @@ This project also forces explicit infrastructure definition (`docker-compose.yml
 - The project uses named volumes with explicit host storage under `./data` (local testing mode).
 
 ## Instructions
-1. Create a runtime env file from the template:
-   - `cp srcs/.env.example srcs/.env`
-   - Fill all required values.
+1. Edit `srcs/.env` and fill all required values.
 2. (Optional) Place secret files in `secrets/` for local use.
 3. Build and start all services:
    - `make up`

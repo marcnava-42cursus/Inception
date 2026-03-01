@@ -14,7 +14,6 @@
 !srcs/**/*.cnf
 !srcs/**/*.sh
 !srcs/**/*.R
-!srcs/.env.example
 
 # Never commit credentials
 srcs/.env

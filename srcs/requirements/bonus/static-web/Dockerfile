@@ -1,28 +1,45 @@
 FROM alpine:3.23.3 AS rbuilder
 
-RUN apk update
-RUN apk add --no-cache R
+RUN apk update && apk add --no-cache \
+    R \
+    R-dev \
+    pandoc-cli \
+    gcc \
+    g++ \
+    gfortran \
+    make \
+    musl-dev \
+    linux-headers \
+    curl-dev \
+    openssl-dev \
+    libxml2-dev \
+    icu-dev \
+    zlib-dev \
+    bzip2-dev \
+    xz-dev \
+    pcre2-dev \
+    ca-certificates
 
-COPY tools/generate_web.R /tmp/generate_web.R
-RUN mkdir -p /out
-RUN Rscript /tmp/generate_web.R /out/index.html
+RUN R -q -e 'options(Ncpus=max(1, parallel::detectCores())); install.packages("rmarkdown", repos="https://cloud.r-project.org")'
+
+WORKDIR /app
+COPY site/  /app/site/
+COPY tools/generate_web.R /app/tools/generate_web.R
+
+RUN mkdir -p /out && Rscript /app/tools/generate_web.R /out/index.html
 
 FROM alpine:3.23.3
 
 LABEL author="marcnava"
 LABEL email="marcnava@student.42madrid.com"
 
-RUN apk update
-RUN apk add --no-cache nginx
+RUN apk update && apk add --no-cache nginx
 
-RUN mkdir -p /run/nginx
-RUN mkdir -p /var/www/static-web
+RUN mkdir -p /run/nginx /var/www/static-web
 
 COPY --from=rbuilder /out/index.html /var/www/static-web/index.html
 COPY conf/default.conf /etc/nginx/http.d/default.conf
 
 EXPOSE 8080
-
 STOPSIGNAL SIGTERM
-
 CMD ["nginx", "-g", "daemon off;"]

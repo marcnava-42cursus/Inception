@@ -1,7 +1,7 @@
 NAME = inception
 ENV_FILE = srcs/.env
 COMPOSE = docker compose -p $(NAME) -f srcs/docker-compose.yml --env-file srcs/.env
-IMAGES = mariadb:inception wordpress:inception nginx:inception adminer:inception
+IMAGES = mariadb:inception wordpress:inception nginx:inception redis:inception adminer:inception static-web:inception ftp:inception
 DATA_PATH = $(shell [ -f $(ENV_FILE) ] && sed -n 's/^DATA_PATH=//p' $(ENV_FILE))
 
 ifeq ($(strip $(DATA_PATH)),)

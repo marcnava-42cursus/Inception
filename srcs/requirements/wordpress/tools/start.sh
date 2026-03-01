@@ -14,6 +14,8 @@ set -eu
 : "${WP_USER:?Missing WP_USER}"
 : "${WP_USER_PASSWORD:?Missing WP_USER_PASSWORD}"
 : "${WP_USER_EMAIL:?Missing WP_USER_EMAIL}"
+: "${WP_REDIS_HOST:?Missing WP_REDIS_HOST}"
+: "${WP_REDIS_PORT:?Missing WP_REDIS_PORT}"
 
 ADMIN_USER_LOWER="$(printf '%s' "${WP_ADMIN_USER}" | tr '[:upper:]' '[:lower:]')"
 case "${ADMIN_USER_LOWER}" in
@@ -71,6 +73,41 @@ if ! su-exec nobody wp user get "${WP_USER}" --path=/var/www/html >/dev/null 2>&
 		--path=/var/www/html \
 		--user_pass="${WP_USER_PASSWORD}" \
 		--role=author
+fi
+
+CTYPE_POLYFILL_MARKER="INCEPTION_CTYPE_POLYFILL"
+if ! grep -q "${CTYPE_POLYFILL_MARKER}" /var/www/html/wp-config.php; then
+	TMP_WP_CONFIG="$(mktemp)"
+	awk -v marker="${CTYPE_POLYFILL_MARKER}" '
+		NR == 1 {
+			print
+			print ""
+			print "// " marker
+			print "if (!function_exists('\''ctype_digit'\'')) {"
+			print "	function ctype_digit($text) {"
+			print "		return is_string($text) && $text !== '\'''\'' && preg_match('\''/^[0-9]+$/'\'', $text) === 1;"
+			print "	}"
+			print "}"
+			next
+		}
+		{ print }
+	' /var/www/html/wp-config.php > "${TMP_WP_CONFIG}"
+	chown nobody:nobody "${TMP_WP_CONFIG}"
+	mv "${TMP_WP_CONFIG}" /var/www/html/wp-config.php
+fi
+
+if ! su-exec nobody wp plugin is-installed redis-cache --path=/var/www/html >/dev/null 2>&1; then
+	su-exec nobody wp plugin install redis-cache --activate --path=/var/www/html
+elif ! su-exec nobody wp plugin is-active redis-cache --path=/var/www/html >/dev/null 2>&1; then
+	su-exec nobody wp plugin activate redis-cache --path=/var/www/html
+fi
+
+su-exec nobody wp config set WP_CACHE true --type=constant --raw --path=/var/www/html
+su-exec nobody wp config set WP_REDIS_HOST "${WP_REDIS_HOST}" --type=constant --path=/var/www/html
+su-exec nobody wp config set WP_REDIS_PORT "${WP_REDIS_PORT}" --type=constant --raw --path=/var/www/html
+
+if [ ! -f /var/www/html/wp-content/object-cache.php ]; then
+	su-exec nobody wp redis enable --path=/var/www/html
 fi
 
 exec php-fpm83 -F
