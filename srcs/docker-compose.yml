@@ -103,6 +103,24 @@ services:
       - inception
     restart: unless-stopped
 
+  backup:
+    container_name: backup
+    image: backup:inception
+    build:
+      context: ./requirements/bonus/backup
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+      - wordpress
+    volumes:
+      - wordpress_data:/var/www/html:ro
+      - backup_data:/backups
+    networks:
+      - inception
+    restart: unless-stopped
+
 volumes:
   mariadb_data:
     driver: local
@@ -116,6 +134,12 @@ volumes:
       type: none
       o: bind
       device: ${DATA_PATH}/wordpress
+  backup_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH}/backups
 
 networks:
   inception:

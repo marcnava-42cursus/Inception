@@ -1,7 +1,7 @@
 NAME = inception
 ENV_FILE = srcs/.env
 COMPOSE = docker compose -p $(NAME) -f srcs/docker-compose.yml --env-file srcs/.env
-IMAGES = mariadb:inception wordpress:inception nginx:inception redis:inception adminer:inception static-web:inception ftp:inception
+IMAGES = mariadb:inception wordpress:inception nginx:inception redis:inception adminer:inception static-web:inception ftp:inception backup:inception
 DATA_PATH = $(shell [ -f $(ENV_FILE) ] && sed -n 's/^DATA_PATH=//p' $(ENV_FILE))
 
 ifeq ($(strip $(DATA_PATH)),)
@@ -22,6 +22,7 @@ build:
 up:
 	mkdir -p $(HOST_DATA_PATH)/mariadb
 	mkdir -p $(HOST_DATA_PATH)/wordpress
+	mkdir -p $(HOST_DATA_PATH)/backups
 	$(COMPOSE) up -d --build
 
 down:
@@ -42,12 +43,13 @@ iclean: down
 
 vclean:
 	-$(COMPOSE) down --remove-orphans
-	-docker volume rm $(NAME)_mariadb_data $(NAME)_wordpress_data 2>/dev/null || true
+	-docker volume rm $(NAME)_mariadb_data $(NAME)_wordpress_data $(NAME)_backup_data 2>/dev/null || true
 
 fclean:
 	$(COMPOSE) down -v --remove-orphans
 	rm -rf $(HOST_DATA_PATH)/mariadb
 	rm -rf $(HOST_DATA_PATH)/wordpress
+	rm -rf $(HOST_DATA_PATH)/backups
 
 re: fclean up
 
