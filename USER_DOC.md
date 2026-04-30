@@ -32,7 +32,7 @@ srcs/.env
 
 This file must exist before starting the project. It stores the domain name, database settings, WordPress users, FTP settings, Redis settings, backup settings, and data path.
 
-Credentials must not be committed to Git. During evaluation, credentials should be created locally in `srcs/.env`.
+Credentials must not be committed to Git. Passwords are stored locally in Docker secret files under `secrets/`.
 
 ## Domain Setup
 
@@ -147,20 +147,22 @@ Open:
 https://marcnava.42.fr/wp-admin
 ```
 
-Use the administrator credentials from `srcs/.env`:
+Use the administrator username from `srcs/.env` and the password from the local secret file:
 
 ```env
 WP_ADMIN_USER=...
-WP_ADMIN_PASSWORD=...
+```
+
+```text
+secrets/wp_admin_password.txt
 ```
 
 The administrator username must not contain `admin`, `Admin`, `administrator`, or `Administrator`.
 
-The regular WordPress user is also configured in `srcs/.env`:
+The regular WordPress user is configured in `srcs/.env` and its password is stored in `secrets/wp_user_password.txt`:
 
 ```env
 WP_USER=...
-WP_USER_PASSWORD=...
 ```
 
 Use the regular user to test comments, and the administrator user to edit pages from the dashboard.
@@ -178,10 +180,10 @@ Use:
 - System: `MySQL / MariaDB`
 - Server: `mariadb`
 - Username: value of `MYSQL_USER`
-- Password: value of `MYSQL_PASSWORD`
+- Password: content of `secrets/db_password.txt`
 - Database: value of `MYSQL_DATABASE`
 
-All values are stored in `srcs/.env`.
+The non-sensitive values are stored in `srcs/.env`; the password is stored in `secrets/db_password.txt`.
 
 ## Access the Static Website
 
@@ -193,11 +195,10 @@ https://marcnava.42.fr/web/
 
 ## Access FTP
 
-FTP uses the credentials from `srcs/.env`:
+FTP uses the username from `srcs/.env` and the password from `secrets/ftp_password.txt`:
 
 ```env
 FTP_USER=...
-FTP_PASSWORD=...
 FTP_PASV_MIN_PORT=40000
 FTP_PASV_MAX_PORT=40010
 ```
@@ -206,6 +207,7 @@ Example check:
 
 ```sh
 set -a; . srcs/.env; set +a
+FTP_PASSWORD="$(cat secrets/ftp_password.txt)"
 curl --ftp-pasv -u "$FTP_USER:$FTP_PASSWORD" ftp://127.0.0.1/
 ```
 
@@ -213,30 +215,34 @@ The FTP root points to the WordPress files volume.
 
 ## Locate and Manage Credentials
 
-Main credential file:
+Main configuration file:
 
 ```text
 srcs/.env
 ```
 
-Optional local secret files:
+Local secret files:
 
 ```text
-secrets/
+secrets/db_password.txt
+secrets/db_root_password.txt
+secrets/wp_admin_password.txt
+secrets/wp_user_password.txt
+secrets/ftp_password.txt
 ```
 
 Important variables:
 
-- `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`: MariaDB credentials.
-- `WP_ADMIN_USER`, `WP_ADMIN_PASSWORD`: WordPress administrator credentials.
-- `WP_USER`, `WP_USER_PASSWORD`: regular WordPress user credentials.
-- `FTP_USER`, `FTP_PASSWORD`: FTP credentials.
-- `BACKUP_DB_USER`, `BACKUP_DB_PASSWORD`: backup database credentials.
+- `MYSQL_USER`: MariaDB user, with password in `secrets/db_password.txt`.
+- `secrets/db_root_password.txt`: MariaDB root password.
+- `WP_ADMIN_USER`: WordPress administrator user, with password in `secrets/wp_admin_password.txt`.
+- `WP_USER`: regular WordPress user, with password in `secrets/wp_user_password.txt`.
+- `FTP_USER`: FTP user, with password in `secrets/ftp_password.txt`.
 
 Rules:
 
 - Do not commit real credentials to Git.
-- Keep `srcs/.env` local.
+- Keep `srcs/.env` and `secrets/*.txt` local.
 - Use strong passwords during real use.
 - If credentials are changed after data already exists, existing MariaDB and WordPress data may still contain old users/passwords. For a clean reset, run `make fclean`, then `make up`.
 
@@ -326,7 +332,8 @@ Check MariaDB content:
 
 ```sh
 set -a; . srcs/.env; set +a
-docker exec mariadb mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h 127.0.0.1 "$MYSQL_DATABASE" -e "SHOW TABLES;"
+DB_PASSWORD="$(cat secrets/db_password.txt)"
+docker exec mariadb mariadb -u"$MYSQL_USER" -p"$DB_PASSWORD" -h 127.0.0.1 "$MYSQL_DATABASE" -e "SHOW TABLES;"
 ```
 
 Check backups:
@@ -359,6 +366,7 @@ If WordPress cannot connect to the database:
 
 - Verify `mariadb` is running.
 - Verify `WORDPRESS_DB_*` values match `MYSQL_*` values in `srcs/.env`.
+- Verify `secrets/db_password.txt` contains the database user password.
 - Check MariaDB logs with `make logs`.
 
 If the domain does not resolve:

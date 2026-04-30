@@ -7,6 +7,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    secrets:
+      - db_password
+      - db_root_password
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -21,6 +24,10 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
     depends_on:
       - mariadb
       - redis
@@ -92,6 +99,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    secrets:
+      - ftp_password
     depends_on:
       - wordpress
     ports:
@@ -111,6 +120,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    secrets:
+      - db_password
     depends_on:
       - mariadb
       - wordpress
@@ -144,3 +155,15 @@ volumes:
 networks:
   inception:
     driver: bridge
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt

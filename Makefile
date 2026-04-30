@@ -47,9 +47,7 @@ vclean:
 
 fclean:
 	$(COMPOSE) down -v --remove-orphans
-	rm -rf $(HOST_DATA_PATH)/mariadb
-	rm -rf $(HOST_DATA_PATH)/wordpress
-	rm -rf $(HOST_DATA_PATH)/backups
+	sudo rm -rf $(HOST_DATA_PATH)
 
 re: fclean up
 

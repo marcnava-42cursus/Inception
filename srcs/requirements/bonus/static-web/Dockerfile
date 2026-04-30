@@ -1,4 +1,4 @@
-FROM alpine:3.23.3 AS rbuilder
+FROM alpine:3.22.4 AS rbuilder
 
 RUN apk update && apk add --no-cache \
     R \
@@ -14,6 +14,7 @@ RUN apk update && apk add --no-cache \
     openssl-dev \
     libxml2-dev \
     icu-dev \
+    libuv-dev \
     zlib-dev \
     bzip2-dev \
     xz-dev \
@@ -28,7 +29,7 @@ COPY tools/generate_web.R /app/tools/generate_web.R
 
 RUN mkdir -p /out && Rscript /app/tools/generate_web.R /out/index.html
 
-FROM alpine:3.23.3
+FROM alpine:3.22.4
 
 LABEL author="marcnava"
 LABEL email="marcnava@student.42madrid.com"

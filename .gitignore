@@ -17,6 +17,8 @@
 !srcs/**/*.Rmd
 
 # Never commit credentials
-!srcs/.env
-!secrets/*
+srcs/.env
+!srcs/.env.example
+!secrets/
+secrets/*
 !secrets/.gitkeep

@@ -3,7 +3,23 @@ set -eu
 
 : "${MYSQL_DATABASE:?Missing MYSQL_DATABASE}"
 : "${MYSQL_USER:?Missing MYSQL_USER}"
-: "${MYSQL_PASSWORD:?Missing MYSQL_PASSWORD}"
+
+read_secret() {
+	var_name="$1"
+	file_path="$2"
+	eval "current_value=\${${var_name}:-}"
+	if [ -n "${current_value}" ]; then
+		printf '%s' "${current_value}"
+	elif [ -r "${file_path}" ]; then
+		cat "${file_path}"
+	else
+		echo "Error: missing ${var_name} or ${file_path}." >&2
+		exit 1
+	fi
+}
+
+MYSQL_PASSWORD="$(read_secret MYSQL_PASSWORD /run/secrets/db_password)"
+export MYSQL_PASSWORD
 
 DB_HOST="${BACKUP_DB_HOST:-mariadb}"
 DB_PORT="${BACKUP_DB_PORT:-3306}"

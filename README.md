@@ -52,7 +52,7 @@ Environment variables are useful for non-sensitive runtime configuration such as
 
 Secrets are better for passwords, private keys, API keys, and other confidential values because they can be stored outside the image and mounted only where needed.
 
-For evaluation, credentials and environment variables must be created locally in `srcs/.env`. Credentials must not be committed to Git outside the evaluator-created `.env` file.
+For evaluation, non-sensitive environment variables must be created locally in `srcs/.env`. Credentials are stored in local Docker secret files under `secrets/` and must not be committed to Git.
 
 ### Docker Network vs Host Network
 
@@ -232,9 +232,9 @@ Use a Linux virtual machine with:
 - `make` installed.
 - Access to edit `/etc/hosts`.
 
-### 2. Create `srcs/.env`
+### 2. Create `srcs/.env` and local secrets
 
-Create `srcs/.env` locally during evaluation. Do not commit real credentials.
+Create `srcs/.env` locally during evaluation. It should contain configuration values, not passwords.
 
 Example:
 
@@ -243,27 +243,21 @@ DOMAIN_NAME=marcnava.42.fr
 
 MYSQL_DATABASE=wordpress
 MYSQL_USER=marcnava
-MYSQL_PASSWORD=<db_user_password>
-MYSQL_ROOT_PASSWORD=<db_root_password>
 
 WORDPRESS_DB_NAME=wordpress
 WORDPRESS_DB_USER=marcnava
-WORDPRESS_DB_PASSWORD=<db_user_password>
 WORDPRESS_DB_HOST=mariadb:3306
 
 WP_TITLE=Inception
 WP_ADMIN_USER=marcnava
-WP_ADMIN_PASSWORD=<wp_admin_password>
 WP_ADMIN_EMAIL=marcnava@student.42madrid.com
 WP_USER=editor
-WP_USER_PASSWORD=<wp_user_password>
 WP_USER_EMAIL=editor@student.42madrid.com
 
 WP_REDIS_HOST=redis
 WP_REDIS_PORT=6379
 
 FTP_USER=marcnava
-FTP_PASSWORD=<ftp_password>
 FTP_PASV_MIN_PORT=40000
 FTP_PASV_MAX_PORT=40010
 
@@ -271,10 +265,21 @@ BACKUP_DB_HOST=mariadb
 BACKUP_DB_PORT=3306
 BACKUP_DB_NAME=wordpress
 BACKUP_DB_USER=marcnava
-BACKUP_DB_PASSWORD=<db_user_password>
 BACKUP_KEEP=72
 
 DATA_PATH=/home/marcnava/data
+```
+
+Create the local secret files:
+
+```sh
+mkdir -p secrets
+printf '%s\n' '<db_user_password>' > secrets/db_password.txt
+printf '%s\n' '<db_root_password>' > secrets/db_root_password.txt
+printf '%s\n' '<wp_admin_password>' > secrets/wp_admin_password.txt
+printf '%s\n' '<wp_user_password>' > secrets/wp_user_password.txt
+printf '%s\n' '<ftp_password>' > secrets/ftp_password.txt
+chmod 600 secrets/*.txt
 ```
 
 The WordPress administrator username must not contain `admin`, `Admin`, `administrator`, or `Administrator`.
@@ -460,8 +465,10 @@ Expected:
 
 ```sh
 set -a; . srcs/.env; set +a
-docker exec mariadb mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -h 127.0.0.1 "$MYSQL_DATABASE" -e "SHOW TABLES;"
-docker exec mariadb mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SHOW DATABASES;"
+DB_PASSWORD="$(cat secrets/db_password.txt)"
+DB_ROOT_PASSWORD="$(cat secrets/db_root_password.txt)"
+docker exec mariadb mariadb -u"$MYSQL_USER" -p"$DB_PASSWORD" -h 127.0.0.1 "$MYSQL_DATABASE" -e "SHOW TABLES;"
+docker exec mariadb mariadb -uroot -p"$DB_ROOT_PASSWORD" -e "SHOW DATABASES;"
 ```
 
 Expected:
@@ -525,6 +532,7 @@ Expected:
 ```sh
 set -a; . srcs/.env; set +a
 docker compose -p inception -f srcs/docker-compose.yml --env-file srcs/.env ps ftp
+FTP_PASSWORD="$(cat secrets/ftp_password.txt)"
 curl --ftp-pasv -u "$FTP_USER:$FTP_PASSWORD" ftp://127.0.0.1/
 ```
 

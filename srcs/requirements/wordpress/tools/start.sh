@@ -3,19 +3,35 @@ set -eu
 
 : "${WORDPRESS_DB_NAME:?Missing WORDPRESS_DB_NAME}"
 : "${WORDPRESS_DB_USER:?Missing WORDPRESS_DB_USER}"
-: "${WORDPRESS_DB_PASSWORD:?Missing WORDPRESS_DB_PASSWORD}"
 : "${WORDPRESS_DB_HOST:?Missing WORDPRESS_DB_HOST}"
 : "${DOMAIN_NAME:?Missing DOMAIN_NAME}"
 
 : "${WP_TITLE:?Missing WP_TITLE}"
 : "${WP_ADMIN_USER:?Missing WP_ADMIN_USER}"
-: "${WP_ADMIN_PASSWORD:?Missing WP_ADMIN_PASSWORD}"
 : "${WP_ADMIN_EMAIL:?Missing WP_ADMIN_EMAIL}"
 : "${WP_USER:?Missing WP_USER}"
-: "${WP_USER_PASSWORD:?Missing WP_USER_PASSWORD}"
 : "${WP_USER_EMAIL:?Missing WP_USER_EMAIL}"
 : "${WP_REDIS_HOST:?Missing WP_REDIS_HOST}"
 : "${WP_REDIS_PORT:?Missing WP_REDIS_PORT}"
+
+read_secret() {
+	var_name="$1"
+	file_path="$2"
+	eval "current_value=\${${var_name}:-}"
+	if [ -n "${current_value}" ]; then
+		printf '%s' "${current_value}"
+	elif [ -r "${file_path}" ]; then
+		cat "${file_path}"
+	else
+		echo "Error: missing ${var_name} or ${file_path}." >&2
+		exit 1
+	fi
+}
+
+WORDPRESS_DB_PASSWORD="$(read_secret WORDPRESS_DB_PASSWORD /run/secrets/db_password)"
+WP_ADMIN_PASSWORD="$(read_secret WP_ADMIN_PASSWORD /run/secrets/wp_admin_password)"
+WP_USER_PASSWORD="$(read_secret WP_USER_PASSWORD /run/secrets/wp_user_password)"
+export WORDPRESS_DB_PASSWORD WP_ADMIN_PASSWORD WP_USER_PASSWORD
 
 ADMIN_USER_LOWER="$(printf '%s' "${WP_ADMIN_USER}" | tr '[:upper:]' '[:lower:]')"
 case "${ADMIN_USER_LOWER}" in

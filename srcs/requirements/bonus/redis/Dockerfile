@@ -1,4 +1,4 @@
-FROM alpine:3.23.3
+FROM alpine:3.22.4
 
 LABEL author="marcnava"
 LABEL email="marcnava@student.42madrid.com"
