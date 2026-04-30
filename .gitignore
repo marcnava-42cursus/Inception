@@ -14,8 +14,9 @@
 !srcs/**/*.cnf
 !srcs/**/*.sh
 !srcs/**/*.R
+!srcs/**/*.Rmd
 
 # Never commit credentials
-srcs/.env
-secrets/*
+!srcs/.env
+!secrets/*
 !secrets/.gitkeep
